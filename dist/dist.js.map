@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../src/game.js", "../src/main.js"],
-  "sourcesContent": ["const game = {\n  get() {\n    const dom = document.createElement('div')\n    dom.innerHTML = 'hello'\n    return dom\n  }\n}\n\nexport default game", "import game from './game'\nconsole.log(game)\ndocument.body.append(game.get())"],
-  "mappings": ";;AAAA,MAAM,OAAO;AAAA,IACX,MAAM;AACJ,YAAM,MAAM,SAAS,cAAc,KAAK;AACxC,UAAI,YAAY;AAChB,aAAO;AAAA,IACT;AAAA,EACF;AAEA,MAAO,eAAQ;;;ACPf,UAAQ,IAAI,YAAI;AAChB,WAAS,KAAK,OAAO,aAAK,IAAI,CAAC;",
-  "names": []
-}

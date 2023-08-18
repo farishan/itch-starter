@@ -17,7 +17,8 @@
 html {
   background-color: var(--background-color);
   color: var(--color);
-  font-family: system-ui, -apple-system, Inter, Roboto, Ubuntu, 'Helvetica Neue', 'Arial', sans-serif;
+  /* font-family: system-ui, -apple-system, Inter, Roboto, Ubuntu, 'Helvetica Neue', 'Arial', sans-serif; */
+  font-family: monospace;
 }
 
 .font-mono {
