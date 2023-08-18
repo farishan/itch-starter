@@ -1,1 +1,284 @@
-(()=>{var m=class{constructor(){let e={};this.observe=(t,o)=>{e[t]||(e[t]=[]),e[t].push(o)},this.unobserve=(t,o)=>{e[t]||(e[t]=[]),e[t]=e[t].filter(r=>r!==o)},this.getObservers=t=>e[t]||[]}notify(e,t){let o=this.getObservers(e);for(let r=0;r<o.length;r++){let s=o[r];s(t)}}};var i=class{constructor(){let e=document.createElement("div");this.get=()=>e,this.set=t=>{this.clear(),this.append(t)},this.clear=()=>e.innerHTML="",this.append=t=>e.append(t)}};var h=class extends m{constructor(){super();let e=this,t=new i,o=document.createElement("div"),r=0,s=!1;o.innerHTML=`frame: ${r}`,t.set(o);function d(){r++,e.notify("frame",r),o.innerHTML=`[loop.js] frame: ${r}`,s&&requestAnimationFrame(d)}this.start=()=>{s||(s=!0,requestAnimationFrame(d))},this.stop=()=>s=!1,this.get=t.get}},k=new h,l=k;var v=class{constructor(){let e=new i,t=document.createElement("div");t.innerHTML=new Date().toString(),setInterval(()=>{t.innerHTML=new Date().toString()},1e3),e.set(t),this.get=e.get}},B=new v;var w=class{constructor(){let e=new i,t=document.createElement("div");t.innerHTML="hello from player",e.set(t),this.get=e.get}},J=new w;var y=class{constructor(){let e=new i,t=document.createElement("div"),o=document.createElement("div"),r=document.createElement("div"),s=[];d();function d(){o.innerHTML="logger head";let c=document.createElement("button");c.onclick=()=>{r.style.display=r.style.display==="none"?"block":"none"},c.innerText="toggle logger visibility",o.append(c),r.innerHTML="logger body",t.style.border="1px solid",t.style.maxHeight="200px",t.style.overflowY="auto",t.append(o),t.append(r),e.set(t)}this.log=c=>{s.push(c),this.render()},this.render=()=>{r.innerHTML="";for(let c=s.length-1;c>=0;c--){let H=s[c];r.innerHTML+=H+"<br>"}},this.get=e.get}},N=new y,L=N;var b=class{view=new i;eventListener={};constructor(){let e=this.view.get();e.style.border="1px solid",e.style.padding="1rem"}addEventListener(e,t,o){this.eventListener[e]||(this.eventListener[e]={}),this.eventListener[e][t]=o,window.addEventListener(e,o),this.update()}removeEventListener(e,t){window.removeEventListener(e,this.eventListener[e][t]),delete this.eventListener[e][t],this.update()}update(){let e=[];Object.keys(this.eventListener).forEach(r=>{Object.keys(this.eventListener[r]).forEach(s=>{e.push(r+"/"+s)})});let t=document.createElement("pre"),o=document.createElement("code");t.append(o),o.innerHTML=JSON.stringify(e,[" "],2),this.view.set(t)}get(){return this.view.get()}},O=new b,p=O;var j={on:(n,e)=>{p.addEventListener(n,"keyboard",e)},addNamedListener:(n,e,t)=>{p.addEventListener(n,`keyboard_${e}`,t)},removeNamedListener:(n,e)=>{p.removeEventListener(n,`keyboard_${e}`)}},a=j;var f=class{constructor(e){this.destroy=()=>e.remove()}};var V=document.body,u=class{constructor(e){this.render=()=>V.append(e)}};var $="p";function x(n){let e=document.createElement($);return e.innerHTML=n,Object.assign({},new f(e),new u(e))}var M="sendMessageToPlayer";function g(n,e,t){let o=x(n);o.render(),a.addNamedListener("keypress",M,r=>{r.key===e&&(o.destroy(),a.removeNamedListener("keypress",M),t())})}var E=class{constructor(){let e=!1;g('press "f" to start the machine',"f",()=>this.start());let t=new i;this.start=()=>{g('Welcome!<br>press "l" to start the logger',"l",()=>{t.append(L.get());let o=document.createElement("div");t.append(o),a.on("keypress",s=>{s.key==="a"&&l.start(),s.key==="s"&&l.stop()}),L.log('press "a" to start loop engine, "s" to stop it');let r=document.createElement("div");o.append(r),l.observe("frame",s=>{r.innerText=`[game.js] frame: ${s}`})}),e=!0},this.get=t.get}},A=new E,T=A;document.body.append(T.get());})();
+(() => {
+  // src/classes/Observable.js
+  var Observable = class {
+    constructor() {
+      const observersByKey = {};
+      this.observe = (key, fn) => {
+        if (!observersByKey[key])
+          observersByKey[key] = [];
+        observersByKey[key].push(fn);
+      };
+      this.unobserve = (key, fn) => {
+        if (!observersByKey[key])
+          observersByKey[key] = [];
+        observersByKey[key] = observersByKey[key].filter((f) => f !== fn);
+      };
+      this.getObservers = (key) => {
+        return observersByKey[key] || [];
+      };
+    }
+    notify(key, message) {
+      const observers = this.getObservers(key);
+      for (let index = 0; index < observers.length; index++) {
+        const observer = observers[index];
+        observer(message);
+      }
+    }
+  };
+
+  // src/classes/View.js
+  var View = class {
+    constructor() {
+      const root = document.createElement("div");
+      this.get = () => root;
+      this.set = (node) => {
+        this.clear();
+        this.append(node);
+      };
+      this.clear = () => root.innerHTML = "";
+      this.append = (node) => root.append(node);
+    }
+  };
+
+  // src/loop.js
+  var Loop = class extends Observable {
+    constructor() {
+      super();
+      const self = this;
+      const view = new View();
+      const content = document.createElement("div");
+      let frame = 0;
+      let shouldRun = false;
+      content.innerHTML = `frame: ${frame}`;
+      view.set(content);
+      function loop2() {
+        frame++;
+        self.notify("frame", frame);
+        content.innerHTML = `[loop.js] frame: ${frame}`;
+        if (shouldRun)
+          requestAnimationFrame(loop2);
+      }
+      this.start = () => {
+        if (shouldRun)
+          return;
+        shouldRun = true;
+        requestAnimationFrame(loop2);
+      };
+      this.stop = () => shouldRun = false;
+      this.get = view.get;
+    }
+  };
+  var loop = new Loop();
+  var loop_default = loop;
+
+  // src/time.js
+  var Time = class {
+    constructor() {
+      const view = new View();
+      const content = document.createElement("div");
+      content.innerHTML = (/* @__PURE__ */ new Date()).toString();
+      setInterval(() => {
+        content.innerHTML = (/* @__PURE__ */ new Date()).toString();
+      }, 1e3);
+      view.set(content);
+      this.get = view.get;
+    }
+  };
+  var time = new Time();
+  var time_default = time;
+
+  // src/player.js
+  var Player = class {
+    constructor() {
+      const view = new View();
+      const content = document.createElement("div");
+      content.innerHTML = "hello from player";
+      view.set(content);
+      this.get = view.get;
+    }
+  };
+  var player = new Player();
+  var player_default = player;
+
+  // src/logger.js
+  var Logger = class {
+    constructor() {
+      const view = new View();
+      const root = document.createElement("div");
+      const head = document.createElement("div");
+      const body = document.createElement("div");
+      const logs = [];
+      setUI();
+      function setUI() {
+        head.innerHTML = "logger head";
+        const toggleButton = document.createElement("button");
+        toggleButton.onclick = () => {
+          body.style.display = body.style.display === "none" ? "block" : "none";
+        };
+        toggleButton.innerText = "toggle logger visibility";
+        head.append(toggleButton);
+        body.innerHTML = "logger body";
+        root.style.border = "1px solid";
+        root.style.maxHeight = "200px";
+        root.style.overflowY = "auto";
+        root.append(head);
+        root.append(body);
+        view.set(root);
+      }
+      this.log = (message) => {
+        logs.push(message);
+        this.render();
+      };
+      this.render = () => {
+        body.innerHTML = "";
+        for (let index = logs.length - 1; index >= 0; index--) {
+          const log = logs[index];
+          body.innerHTML += log + "<br>";
+        }
+      };
+      this.get = view.get;
+    }
+  };
+  var logger = new Logger();
+  var logger_default = logger;
+
+  // src/window.js
+  var WindowEventProxy = class {
+    view = new View();
+    eventListener = {};
+    constructor() {
+      const dom = this.view.get();
+      dom.style.border = "1px solid";
+      dom.style.padding = "1rem";
+    }
+    addEventListener(eventKey, key, func) {
+      if (!this.eventListener[eventKey])
+        this.eventListener[eventKey] = {};
+      this.eventListener[eventKey][key] = func;
+      window.addEventListener(eventKey, func);
+      this.update();
+    }
+    removeEventListener(eventKey, key) {
+      window.removeEventListener(eventKey, this.eventListener[eventKey][key]);
+      delete this.eventListener[eventKey][key];
+      this.update();
+    }
+    update() {
+      const listeners = [];
+      Object.keys(this.eventListener).forEach((eventKey) => {
+        Object.keys(this.eventListener[eventKey]).forEach((key) => {
+          listeners.push(eventKey + "/" + key);
+        });
+      });
+      const contentRoot = document.createElement("pre");
+      const content = document.createElement("code");
+      contentRoot.append(content);
+      content.innerHTML = JSON.stringify(listeners, [" "], 2);
+      this.view.set(contentRoot);
+    }
+    get() {
+      return this.view.get();
+    }
+  };
+  var windowEventProxy = new WindowEventProxy();
+  var window_default = windowEventProxy;
+
+  // src/keyboard.js
+  var keyboard = {
+    on: (event, callback) => {
+      window_default.addEventListener(event, "keyboard", callback);
+    },
+    addNamedListener: (event, name, callback) => {
+      window_default.addEventListener(event, `keyboard_${name}`, callback);
+    },
+    removeNamedListener: (event, name) => {
+      window_default.removeEventListener(event, `keyboard_${name}`);
+    }
+  };
+  var keyboard_default = keyboard;
+
+  // src/classes/Destroyable.js
+  var Destroyable = class {
+    constructor(DOM) {
+      this.destroy = () => DOM.remove();
+    }
+  };
+
+  // src/classes/Renderable.js
+  var TARGET = document.body;
+  var Renderable = class {
+    constructor(DOM) {
+      this.render = () => TARGET.append(DOM);
+    }
+  };
+
+  // src/factories/createMessage.js
+  var ELEMENT = "p";
+  function createMessage(message) {
+    const dom = document.createElement(ELEMENT);
+    dom.innerHTML = message;
+    return Object.assign({}, new Destroyable(dom), new Renderable(dom));
+  }
+
+  // src/sendMessageToPlayer.js
+  var NAME = "sendMessageToPlayer";
+  function sendMessageToPlayer(message, dismisser, callback) {
+    const _message = createMessage(message);
+    _message.render();
+    keyboard_default.addNamedListener("keypress", NAME, (e) => {
+      if (e.key !== dismisser)
+        return;
+      _message.destroy();
+      keyboard_default.removeNamedListener("keypress", NAME);
+      callback();
+    });
+  }
+
+  // src/game.js
+  var Game = class {
+    constructor() {
+      let isStarted = false;
+      const view = new View();
+      sendMessageToPlayer('press "f" to start the machine', "f", () => this.start());
+      this.start = () => {
+        sendMessageToPlayer('Welcome!<br>press "l" to start the logger', "l", () => {
+          view.append(logger_default.get());
+          const content = document.createElement("div");
+          const frameDisplay = document.createElement("div");
+          content.append(frameDisplay);
+          view.append(content);
+          keyboard_default.on("keypress", (e) => {
+            if (e.key === "a")
+              loop_default.start();
+            if (e.key === "s")
+              loop_default.stop();
+            if (e.key === "t")
+              content.append(time_default.get());
+            if (e.key === "p")
+              content.append(player_default.get());
+            if (e.key === "l")
+              content.append(loop_default.get());
+          });
+          logger_default.log(`
+          press one of these keys:
+            <br>"a" to start loop engine, "s" to stop it.
+            <br>"t" to append time
+            <br>"p" to append player
+            <br>"l" to append loop
+        `);
+          loop_default.observe("frame", (frame) => {
+            frameDisplay.innerText = `[game.js] frame: ${frame}`;
+          });
+        });
+        isStarted = true;
+      };
+      this.get = view.get;
+    }
+  };
+  var game = new Game();
+  var game_default = game;
+
+  // src/main.js
+  document.body.append(game_default.get());
+})();
+//# sourceMappingURL=dist.js.map
